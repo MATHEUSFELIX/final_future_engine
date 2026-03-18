@@ -1,0 +1,71 @@
+# Future Engine — Progress Log
+
+## Instrução para agentes
+Leia este arquivo no início de cada sessão. Atualize ao final, antes do commit.
+Nunca sobrescreva entradas anteriores — apenas acrescente ao final.
+
+---
+
+## Estado atual do projeto
+
+**Última sessão**: [preencher]
+**Features passing**: 0 / 20
+**Branch atual**: main
+**Último commit**: [preencher após primeiro commit]
+
+---
+
+## Sessão 000 — Setup inicial (harness)
+
+**Data**: 2026-03-17
+**Agente**: Initializer
+**Objetivo**: Criar infraestrutura do harness
+
+**O que foi feito**:
+- Criado feature_list.json com 20 features mapeadas
+- Criado este arquivo de progresso
+- Criado init.sh para startup reproduzível
+- Criado prompts de initializer e coding agent
+- Identificados 5 bugs críticos no código existente:
+  1. STORE in-memory (F002 falha após restart)
+  2. avg_price sobrescreve ao invés de VWAP (F014)
+  3. signal_engine usa math.sin — sem dados reais (F004-F006)
+  4. unrealized_pnl usa 1% fixo (F016)
+  5. Sem validação de quantity <= 0 antes de registrar ordem (F013)
+
+**Estado ao final**:
+- API funcional em modo paper
+- Todos os 20 features marcados como passes: false
+- Ambiente Docker funcional via docker-compose
+
+**Para a próxima sessão**:
+- Prioridade 1: Migrar STORE para SQLite (F002)
+- Prioridade 2: Corrigir VWAP em portfolio_engine (F014)
+- Prioridade 3: Adicionar guard de quantity=0 em execution_engine (F013)
+- Depois: Substituir signal_engine mock por dados reais (F004-F006)
+
+---
+
+## [Template para próximas sessões]
+
+## Sessão NNN — [título]
+
+**Data**: 
+**Agente**: Coding Agent
+**Objetivo**: 
+
+**Features trabalhadas**:
+- [ ] F0XX: [descrição]
+
+**O que foi feito**:
+- 
+
+**Bugs encontrados**:
+- 
+
+**Estado ao final**:
+- Features passing: X / 20
+- Testes rodados: 
+
+**Para a próxima sessão**:
+- 

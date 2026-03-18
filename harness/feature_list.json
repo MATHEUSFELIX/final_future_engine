@@ -1,0 +1,276 @@
+{
+  "project": "Future Engine",
+  "version": "1.0",
+  "instructions": "Este arquivo é a fonte de verdade do projeto. NÃO remova nem edite tests existentes. Atualize 'passes' para true somente após verificação end-to-end. Adicione 'notes' com observações de cada sessão.",
+  "features": [
+
+    {
+      "id": "F001",
+      "category": "infrastructure",
+      "description": "API inicia sem erros e retorna health check válido",
+      "steps": [
+        "Rodar init.sh",
+        "Chamar GET /health",
+        "Verificar {'status': 'ok'} no response",
+        "Verificar que o campo 'env' está presente"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F002",
+      "category": "infrastructure",
+      "description": "Estado (ordens, posições, eventos) persiste entre restarts da API",
+      "steps": [
+        "Rodar um ciclo de autotrade via POST /autotrade/run",
+        "Verificar que ordens aparecem em GET /ops/orders",
+        "Reiniciar o container da API",
+        "Verificar que as mesmas ordens ainda aparecem em GET /ops/orders"
+      ],
+      "passes": false,
+      "notes": "STORE atual é in-memory. Requer migração para SQLite."
+    },
+
+    {
+      "id": "F003",
+      "category": "infrastructure",
+      "description": "UI Streamlit conecta à API e exibe modo (paper/live) corretamente",
+      "steps": [
+        "Abrir http://localhost:8501",
+        "Verificar que as métricas de modo são exibidas sem erro",
+        "Verificar que o toggle de modo real está visível e desabilitado"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F004",
+      "category": "signal_engine",
+      "description": "Geração de sinais retorna estrutura válida para cada símbolo solicitado",
+      "steps": [
+        "POST /signals/generate com symbols=['BTCUSDT','ETHUSDT','SOLUSDT'] e timeframe='4h'",
+        "Verificar que response contém exatamente 3 sinais",
+        "Verificar que cada sinal tem: symbol, prob_up, prob_down, confidence, action, expected_move",
+        "Verificar que prob_up + prob_down == 1.0 para cada sinal",
+        "Verificar que action está em ['buy','sell','hold']"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F005",
+      "category": "signal_engine",
+      "description": "Sinais são ordenados por confidence decrescente",
+      "steps": [
+        "POST /signals/generate com múltiplos símbolos",
+        "Verificar que confidence[0] >= confidence[1] >= confidence[2]"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F006",
+      "category": "signal_engine",
+      "description": "Símbolo desconhecido retorna sinal com price=100.0 e não gera erro",
+      "steps": [
+        "POST /signals/generate com symbols=['XYZUSDT']",
+        "Verificar que response retorna 1 sinal com price=100.0",
+        "Verificar status 200"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F007",
+      "category": "risk_engine",
+      "description": "Sinal com confidence < 0.62 é bloqueado pelo risk engine",
+      "steps": [
+        "POST /autotrade/run com symbols que gerem sinal com confidence < 0.62",
+        "Verificar que nenhuma ordem é criada para esse símbolo",
+        "Verificar que o campo risk_reason == 'blocked_by_thresholds' nos sinais aprovados"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F008",
+      "category": "risk_engine",
+      "description": "Sinal com action='hold' é bloqueado independente de confidence",
+      "steps": [
+        "Forçar um sinal com action='hold' via manipulação direta ou parâmetro de teste",
+        "Verificar que risk_allowed=false",
+        "Verificar que nenhuma ordem é gerada"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F009",
+      "category": "backtest_engine",
+      "description": "Backtest retorna métricas válidas e coerentes para qualquer símbolo",
+      "steps": [
+        "POST /backtest/run com symbol='BTCUSDT', periods=180, timeframe='4h'",
+        "Verificar presença de: win_rate, avg_gain, avg_loss, expectancy, max_drawdown, sharpe_like",
+        "Verificar que 0 < win_rate < 1",
+        "Verificar que max_drawdown > 0",
+        "Verificar que expectancy = win_rate * avg_gain - (1-win_rate) * avg_loss"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F010",
+      "category": "backtest_engine",
+      "description": "Backtest com periods=30 retorna win_rate menor que com periods=500",
+      "steps": [
+        "POST /backtest/run com periods=30",
+        "POST /backtest/run com periods=500",
+        "Verificar que win_rate(500) > win_rate(30)"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F011",
+      "category": "execution_engine",
+      "description": "Em modo paper, ordem com sinal aprovado retorna status='executed'",
+      "steps": [
+        "Garantir EXCHANGE_MODE=paper no .env",
+        "POST /autotrade/run com símbolo que gere sinal aprovado pelo risk engine",
+        "Verificar GET /ops/orders e checar status='executed' na ordem gerada"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F012",
+      "category": "execution_engine",
+      "description": "Em modo live com LIVE_TRADING_ENABLED=false, ordem retorna status='blocked'",
+      "steps": [
+        "Setar EXCHANGE_MODE=live e LIVE_TRADING_ENABLED=false no .env",
+        "POST /autotrade/run",
+        "Verificar que todas as ordens têm status='blocked'",
+        "Verificar que reason contém 'LIVE_TRADING_ENABLED=false'"
+      ],
+      "passes": false,
+      "notes": "Guardrail crítico de segurança — deve ser testado sempre antes de ir para live."
+    },
+
+    {
+      "id": "F013",
+      "category": "execution_engine",
+      "description": "Ordem com quantity=0 é rejeitada antes de ser registrada",
+      "steps": [
+        "Tentar criar ordem com qty_fraction=0 (sinal bloqueado pelo risk engine)",
+        "Verificar que nenhuma ordem com quantity=0 aparece em GET /ops/orders"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F014",
+      "category": "portfolio_engine",
+      "description": "Posição acumula corretamente após múltiplas ordens no mesmo símbolo",
+      "steps": [
+        "Rodar dois ciclos de autotrade para BTCUSDT",
+        "Verificar GET /portfolio/positions",
+        "Verificar que net_qty é a soma das quantidades (buy positivo, sell negativo)",
+        "Verificar que avg_price é a média ponderada (VWAP), não o último preço"
+      ],
+      "passes": false,
+      "notes": "Bug atual: avg_price sobrescreve ao invés de calcular VWAP."
+    },
+
+    {
+      "id": "F015",
+      "category": "portfolio_engine",
+      "description": "Ordem com status='blocked' NÃO atualiza posição",
+      "steps": [
+        "Setar LIVE_TRADING_ENABLED=false e EXCHANGE_MODE=live",
+        "POST /autotrade/run",
+        "Verificar GET /portfolio/positions — deve estar vazio ou inalterado"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F016",
+      "category": "portfolio_engine",
+      "description": "PnL retorna gross_exposure coerente com as posições abertas",
+      "steps": [
+        "Abrir posição em BTCUSDT via autotrade",
+        "Verificar GET /portfolio/pnl",
+        "Verificar que gross_exposure > 0",
+        "Verificar que positions == número de símbolos com net_qty != 0"
+      ],
+      "passes": false,
+      "notes": "unrealized_pnl atual usa 1% fixo — placeholder aceitável para paper mode."
+    },
+
+    {
+      "id": "F017",
+      "category": "scheduler_engine",
+      "description": "Ciclo completo (scheduler) executa todos os passos em sequência sem erro",
+      "steps": [
+        "POST /scheduler/run-cycle com symbols=['BTCUSDT','ETHUSDT','SOLUSDT']",
+        "Verificar que response contém: signals, orders, executed",
+        "Verificar que GET /ops/events mostra eventos para cada ordem gerada",
+        "Verificar que GET /portfolio/positions foi atualizado"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F018",
+      "category": "scheduler_engine",
+      "description": "Ciclo com todos os sinais bloqueados pelo risk engine retorna executed=0",
+      "steps": [
+        "Manipular thresholds para que todos os sinais sejam bloqueados",
+        "POST /scheduler/run-cycle",
+        "Verificar que executed=0 e orders=[]"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F019",
+      "category": "ops",
+      "description": "GET /ops/status reflete corretamente as configurações do .env",
+      "steps": [
+        "Verificar que live_trading_enabled bate com LIVE_TRADING_ENABLED no .env",
+        "Verificar que exchange_mode bate com EXCHANGE_MODE",
+        "Verificar que signals e orders refletem o estado atual do STORE"
+      ],
+      "passes": false,
+      "notes": ""
+    },
+
+    {
+      "id": "F020",
+      "category": "ops",
+      "description": "GET /ops/events registra evento para cada ordem processada no ciclo",
+      "steps": [
+        "POST /scheduler/run-cycle",
+        "GET /ops/events",
+        "Verificar que cada ordem gerada tem exatamente 1 evento correspondente",
+        "Verificar que evento contém: type, symbol, status"
+      ],
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
