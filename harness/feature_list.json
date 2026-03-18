@@ -3,7 +3,6 @@
   "version": "1.0",
   "instructions": "Este arquivo é a fonte de verdade do projeto. NÃO remova nem edite tests existentes. Atualize 'passes' para true somente após verificação end-to-end. Adicione 'notes' com observações de cada sessão.",
   "features": [
-
     {
       "id": "F001",
       "category": "infrastructure",
@@ -14,10 +13,9 @@
         "Verificar {'status': 'ok'} no response",
         "Verificar que o campo 'env' está presente"
       ],
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Testado em 2026-03-18. API inicia via uvicorn, GET /health retorna {status: ok, env: {...}}. Smoke test POST /signals/generate passou. Docker Hub inacessível no ambiente — verificado com uvicorn direto."
     },
-
     {
       "id": "F002",
       "category": "infrastructure",
@@ -31,7 +29,6 @@
       "passes": false,
       "notes": "STORE atual é in-memory. Requer migração para SQLite."
     },
-
     {
       "id": "F003",
       "category": "infrastructure",
@@ -44,7 +41,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F004",
       "category": "signal_engine",
@@ -59,7 +55,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F005",
       "category": "signal_engine",
@@ -71,7 +66,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F006",
       "category": "signal_engine",
@@ -84,7 +78,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F007",
       "category": "risk_engine",
@@ -97,7 +90,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F008",
       "category": "risk_engine",
@@ -110,7 +102,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F009",
       "category": "backtest_engine",
@@ -125,7 +116,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F010",
       "category": "backtest_engine",
@@ -138,7 +128,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F011",
       "category": "execution_engine",
@@ -151,7 +140,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F012",
       "category": "execution_engine",
@@ -165,7 +153,6 @@
       "passes": false,
       "notes": "Guardrail crítico de segurança — deve ser testado sempre antes de ir para live."
     },
-
     {
       "id": "F013",
       "category": "execution_engine",
@@ -177,7 +164,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F014",
       "category": "portfolio_engine",
@@ -191,7 +177,6 @@
       "passes": false,
       "notes": "Bug atual: avg_price sobrescreve ao invés de calcular VWAP."
     },
-
     {
       "id": "F015",
       "category": "portfolio_engine",
@@ -204,7 +189,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F016",
       "category": "portfolio_engine",
@@ -218,7 +202,6 @@
       "passes": false,
       "notes": "unrealized_pnl atual usa 1% fixo — placeholder aceitável para paper mode."
     },
-
     {
       "id": "F017",
       "category": "scheduler_engine",
@@ -232,7 +215,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F018",
       "category": "scheduler_engine",
@@ -245,7 +227,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F019",
       "category": "ops",
@@ -258,7 +239,6 @@
       "passes": false,
       "notes": ""
     },
-
     {
       "id": "F020",
       "category": "ops",

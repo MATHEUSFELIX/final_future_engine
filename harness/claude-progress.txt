@@ -69,3 +69,38 @@ Nunca sobrescreva entradas anteriores — apenas acrescente ao final.
 
 **Para a próxima sessão**:
 - 
+
+---
+
+## Sessão 001 — Infraestrutura da API (F001)
+
+**Data**: 2026-03-18
+**Agente**: Coding Agent
+**Objetivo**: Implementar F001 — API inicia sem erros e retorna health check válido
+
+**Features trabalhadas**:
+- [x] F001: passes=true
+
+**O que foi feito**:
+- Criado app/main.py com FastAPI e todos os routers registrados
+- Criado app/core/config.py com Settings (pydantic-settings) para EXCHANGE_MODE, LIVE_TRADING_ENABLED, etc.
+- Criado app/services/signal_engine.py — geração determinística de sinais por símbolo
+- Criado app/services/risk_engine.py — filtro de confidence < 0.62 e action='hold'
+- Criado app/services/backtest_engine.py — métricas de backtest com convergência por períodos
+- Criados todos os routers: health, signals, autotrade, ops, portfolio, backtest, scheduler
+- Criados Dockerfile, docker-compose.yml, requirements.txt, .env.example
+- Criados __init__.py para app/, app/core/, app/services/, app/routers/
+
+**Bugs encontrados**:
+- Docker Hub inacessível no ambiente de desenvolvimento (sem acesso à internet para pull de imagens) — verificação F001 feita com uvicorn direto
+
+**Estado ao final**:
+- Features passing: 1 / 20 (F001)
+- API responde em /health com {"status": "ok", "env": {...}}
+- Smoke test POST /signals/generate passou
+- Sinais gerados com prob_up + prob_down == 1.0, ordenados por confidence
+
+**Para a próxima sessão**:
+- Prioridade: F002 — persistência SQLite entre restarts (store.py já implementado, testar com restart)
+- F011: verificar status='executed' em paper mode (já funcional — testar end-to-end)
+- F013: verificar rejeição de quantity=0 (já implementado em execution_engine.py)
