@@ -33,10 +33,39 @@ else
   echo "✅ Modo paper confirmado (LIVE_TRADING_ENABLED=false)"
 fi
 
-# 3. Subir containers
+# 3. Subir containers (com fallback local se Docker Hub inacessível)
 echo "[3/5] Subindo containers..."
-docker compose up -d --build
-sleep 3
+USE_LOCAL=false
+
+# Carregar variáveis do .env para uso no fallback local
+set -a; source .env; set +a
+
+# Verificar se API já está respondendo (sessão já inicializada)
+if curl -s http://localhost:8000/health | grep -q '"status":"ok"' 2>/dev/null; then
+  echo "✅ API já está em execução."
+else
+  # Tentar docker compose; capturar saída sem propagar sinal de kill
+  DOCKER_OUT=$(docker compose up -d --build 2>&1) && DOCKER_EXIT=0 || DOCKER_EXIT=$?
+  if [ "$DOCKER_EXIT" -eq 0 ]; then
+    echo "$DOCKER_OUT"
+    sleep 3
+  else
+    echo "$DOCKER_OUT" | tail -5
+    echo "⚠️  Docker build falhou (sem acesso ao Docker Hub?). Usando modo local com uvicorn."
+    USE_LOCAL=true
+    # Garantir dependências Python instaladas
+    pip install -q fastapi "uvicorn[standard]" pydantic 2>/dev/null || true
+    # Garantir diretório do banco de dados
+    DB_DIR=$(dirname "${DB_PATH:-/tmp/future_engine.db}")
+    mkdir -p "$DB_DIR" 2>/dev/null || export DB_PATH="/tmp/future_engine.db"
+    # Matar API anterior se existir
+    pkill -f "uvicorn app.main:app" 2>/dev/null || true
+    sleep 1
+    # Subir API em background
+    PYTHONPATH="$(pwd)" uvicorn app.main:app --host 0.0.0.0 --port 8000 &>/tmp/future_engine_api.log &
+    sleep 3
+  fi
+fi
 
 # 4. Health check
 echo "[4/5] Verificando saúde da API..."
@@ -46,8 +75,13 @@ until curl -s http://localhost:8000/health | grep -q '"status":"ok"' 2>/dev/null
   RETRY=$((RETRY+1))
   if [ $RETRY -ge $MAX_RETRIES ]; then
     echo "❌ API não respondeu após ${MAX_RETRIES} tentativas."
-    echo "Logs:"
-    docker compose logs api --tail=20
+    if [ "$USE_LOCAL" = "true" ]; then
+      echo "Logs da API local:"
+      tail -20 /tmp/future_engine_api.log 2>/dev/null
+    else
+      echo "Logs:"
+      docker compose logs api --tail=20
+    fi
     exit 1
   fi
   echo "   Aguardando API... ($RETRY/$MAX_RETRIES)"
